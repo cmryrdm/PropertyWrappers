@@ -50,9 +50,11 @@ struct ContentView: View {
         
         NavigationLink {
           NumberView()
+            .navigationBarBackButtonHidden(true)
         } label: {
           Text("number view")
         }.padding()
+          
         
         ButtonView(type: .navigator, bindingBool: $isButtonPressed, viewLabel: "letter view")
           .sheet(isPresented: isButtonPressedBinding, content: {
