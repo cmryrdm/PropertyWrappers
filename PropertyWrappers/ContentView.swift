@@ -9,27 +9,35 @@ import SwiftUI
 
 struct ContentView: View {
   @State private var name = ""
+  @State private var surname = ""
   @State private var isShowingPopover = false
-  @State private var isButtonPressed : Bool? = false
+  @State private var isNumberButtonPressed: Bool = false
+  @State private var isLetterButtonPressed: Bool? = false
   var isButtonPressedBinding: Binding<Bool> {
     Binding(
       get: {
-        self.isButtonPressed ?? false
+        self.isLetterButtonPressed ?? false
       },
       set: { newValue in
-        self.isButtonPressed = newValue
+        self.isLetterButtonPressed = newValue
       }
     )
   }
+  var isValid: Bool {
+    return !name.isEmpty && !surname.isEmpty
+  }
   
-  //@FocusState private var nameIsFocused: Bool
+  @FocusState private var focusField: Field?
+  enum Field: Hashable {
+    case name
+    case surname
+  }
   
   var body: some View {
-    NavigationView {
+    NavigationStack {
       VStack {
-        //        Text(name)
-        //          .font(.largeTitle)
-        //          .padding()
+        Text("Please enter your name and surname")
+          .foregroundStyle(isValid ? .black : .red)
         
         TextField("Enter your name", text: $name)
           .popover(isPresented: $isShowingPopover) {
@@ -38,35 +46,49 @@ struct ContentView: View {
               .padding()
           }
           .multilineTextAlignment(.center)
-        //.focused($nameIsFocused)
-          .frame(width: UIScreen.main.bounds.width * 0.4, alignment: .center)
+          .padding(.horizontal, 64)
           .textInputAutocapitalization(.never)
           .autocorrectionDisabled()
           .border(.secondary).cornerRadius(3)
           .onTapGesture {
             isShowingPopover.toggle()
           }
+          .focused($focusField, equals: .name)
+          .onAppear {
+            focusField = .name
+          }
+        
+        TextField("Enter your surname", text: $surname)
+          .multilineTextAlignment(.center)
+          .padding(.horizontal, 64)
+          .textInputAutocapitalization(.never)
+          .autocorrectionDisabled()
+          .border(.secondary).cornerRadius(3)
+          .focused($focusField, equals: .surname)
         
         
-        NavigationLink {
-          NumberView()
-            .navigationBarBackButtonHidden(true)
-        } label: {
-          Text("number view")
-        }.padding()
-          
+        ButtonView(type: .numerator, viewLabel: "number view") {
+          if name.isEmpty {
+            focusField = .name
+          } else if surname.isEmpty {
+            focusField = .surname
+          } else {
+            isNumberButtonPressed.toggle()
+          }
+        }
+        .padding()
         
-        ButtonView(type: .navigator, bindingBool: $isButtonPressed, viewLabel: "letter view")
+        NavigationLink("", destination: NumberView().navigationBarBackButtonHidden(),
+                       isActive: $isNumberButtonPressed)
+        
+        ButtonView(type: .navigator, bindingBool: $isLetterButtonPressed, viewLabel: "letter view")
           .sheet(isPresented: isButtonPressedBinding, content: {
             LetterView()
           })
           .padding()
-        
-        
-        
+          .disabled(!isValid)
       }
     }
-    
   }
 }
 
